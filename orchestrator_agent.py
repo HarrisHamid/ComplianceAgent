@@ -19,7 +19,9 @@ def detect_frameworks(policy_text: str) -> dict:
         for key in FRAMEWORKS
     )
 
-    prompt = f"""You are a compliance expert analyzing a document to determine which regulatory frameworks are relevant.
+    prompt = f"""You are a compliance expert. Your job is to decide which frameworks this SPECIFIC DOCUMENT can be meaningfully audited against.
+
+This is NOT about what certifications the company might need. It is purely about whether the document itself contains enough content to assess compliance with each framework's requirements.
 
 Available frameworks:
 {framework_list}
@@ -29,16 +31,18 @@ Document (first 8,000 characters):
 {policy_text[:8000]}
 ---
 
-Determine which frameworks apply. Use these signals:
-- GDPR: Company serves EU residents, mentions GDPR, or processes personal data of EU subjects
-- SOC2: SaaS or cloud company that stores customer data and needs enterprise security certification
-- HIPAA: Handles patient health data, medical records, or Protected Health Information (PHI)
-- ISO27001: Mentions ISO 27001 certification, ISMS, formal security management, or is a B2B enterprise vendor
+For each framework ask: "Does this document contain content that lets me evaluate compliance with this framework's requirements?"
+
+Signals:
+- GDPR: Select if the document describes how personal data is collected, used, stored, or shared, and describes individual rights. Privacy policies almost always qualify.
+- SOC2: Select ONLY if the document describes internal security controls, access management, incident response, uptime commitments, or audit logging. A privacy policy alone does NOT qualify.
+- HIPAA: Select ONLY if the document explicitly describes handling of patient health records or Protected Health Information (PHI). General privacy policies do NOT qualify unless health data is specifically mentioned.
+- ISO27001: Select ONLY if the document describes an ISMS, risk assessment processes, or formal security governance structure. A privacy policy alone does NOT qualify.
 
 Respond with ONLY a JSON object, no other text:
 {{
-  "selected_frameworks": ["GDPR", "SOC2"],
-  "overall_reasoning": "one sentence describing this document and why those frameworks apply",
+  "selected_frameworks": ["GDPR"],
+  "overall_reasoning": "one sentence describing what type of document this is and which frameworks its content can actually be audited against",
   "per_framework": {{
 {per_fw_template}
   }}
@@ -46,8 +50,8 @@ Respond with ONLY a JSON object, no other text:
 
 Rules:
 - selected_frameworks must only list frameworks where applies is true
-- Err on the side of inclusion when ambiguous
-- If nothing is clear, return all frameworks as a fallback"""
+- Only select a framework if the document contains auditable content for it
+- The company's industry or size does NOT matter — only what the document itself contains"""
 
     client = anthropic.Anthropic()
 
@@ -80,8 +84,8 @@ Rules:
         f for f in result.get("selected_frameworks", []) if f in FRAMEWORKS
     ]
 
-    # If the model returned an empty list, run everything
+    # If the model returned nothing at all (shouldn't happen), default to GDPR only
     if not result["selected_frameworks"]:
-        result["selected_frameworks"] = list(FRAMEWORKS.keys())
+        result["selected_frameworks"] = ["GDPR"]
 
     return result

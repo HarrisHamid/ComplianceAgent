@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lexis Audit — AI Compliance Intelligence</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root {
       --bg:       #07090f;
@@ -448,6 +450,97 @@
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
 
+    /* ── AGENT PROGRESS BARS ─────────────────── */
+    #phase-agents {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .agents-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .agents-label {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .agents-reason {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .fw-bar-row { margin-bottom: 24px; }
+
+    .fw-bar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .fw-bar-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      color: var(--text);
+      font-weight: 500;
+      min-width: 90px;
+    }
+    .fw-bar-status {
+      flex: 1;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .fw-bar-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--gold);
+      min-width: 38px;
+      text-align: right;
+      transition: color 0.4s;
+    }
+    .fw-bar-pct.complete { color: var(--pass); }
+
+    .fw-bar-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: visible;
+      position: relative;
+    }
+    .fw-bar-fill {
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .fw-bar-fill::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -3px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold), 0 0 20px rgba(200,151,47,0.4);
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    .fw-bar-fill.complete {
+      background: linear-gradient(90deg, rgba(34,197,94,0.3), var(--pass));
+    }
+    .fw-bar-fill.complete::after {
+      background: var(--pass);
+      box-shadow: 0 0 10px var(--pass), 0 0 20px rgba(34,197,94,0.4);
+    }
+
     /* ── RESULTS ─────────────────────────────── */
     #results-section {
       display: none;
@@ -705,12 +798,60 @@
     }
     #error-toast.visible { display: block; }
 
+    /* ── RESULTS ACTION BAR ─────────────────── */
+    #results-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-bottom: 28px;
+    }
+
+    #download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--gold);
+      color: #000;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    #download-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    #new-audit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, transform 0.1s;
+    }
+    #new-audit-btn:hover { color: var(--text); border-color: var(--border2); transform: translateY(-1px); }
+
     @media (max-width: 640px) {
       header { padding: 16px 20px; }
       main { padding: 40px 16px 60px; }
       .fw-grid { grid-template-columns: 1fr 1fr; }
       #scores-grid { grid-template-columns: 1fr 1fr; }
       .td-explanation { display: none; }
+      #results-actions { justify-content: stretch; }
+      #results-actions button { flex: 1; justify-content: center; }
     }
   </style>
 </head>
@@ -773,25 +914,48 @@
 
   <!-- ── LOADING ── -->
   <section id="loading-section">
-    <div class="scanner">
-      <div class="scan-line"></div>
-      <div class="scanner-lines">
-        <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
-        <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
-        <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
-        <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
+    <!-- Phase 1: scanner while orchestrator reads the document -->
+    <div id="phase-scan">
+      <div class="scanner">
+        <div class="scan-line"></div>
+        <div class="scanner-lines">
+          <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
+          <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
+          <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
+          <div class="s-line"></div><div class="s-line"></div><div class="s-line"></div>
+        </div>
+      </div>
+      <div>
+        <p class="loading-text" id="loading-status"><strong>Uploading document</strong></p>
+        <div class="loading-dots" style="margin-top:12px; text-align:center;">
+          <span></span><span></span><span></span>
+        </div>
       </div>
     </div>
-    <div>
-      <p class="loading-text" id="loading-status"><strong>Extracting document text</strong></p>
-      <div class="loading-dots" style="margin-top:12px; text-align:center;">
-        <span></span><span></span><span></span>
+
+    <!-- Phase 2: per-framework progress bars -->
+    <div id="phase-agents" style="display:none">
+      <div class="agents-header">
+        <div class="agents-label">Compliance Agents Running</div>
+        <div class="agents-reason" id="agents-reason"></div>
       </div>
+      <div id="fw-progress-bars"></div>
     </div>
   </section>
 
   <!-- ── RESULTS ── -->
   <section id="results-section">
+    <div id="results-actions">
+      <button id="new-audit-btn" onclick="runNewAudit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.3"/></svg>
+        Run New Audit
+      </button>
+      <button id="download-btn" onclick="downloadReport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Report
+      </button>
+    </div>
+
     <div id="orch-callout" class="orch-callout" style="display:none">
       <div class="orch-label">Orchestrator Decision</div>
       <div class="orch-reasoning" id="orch-reasoning"></div>
@@ -823,6 +987,7 @@
 <script>
   // ── State ──────────────────────────────────────────────────────────────────
   let selectedFile = null;
+  let lastResults  = null;
 
   // ── Dropzone drag/drop ─────────────────────────────────────────────────────
   const dropzone = document.getElementById('dropzone');
@@ -860,44 +1025,98 @@
   // ── Analyze ────────────────────────────────────────────────────────────────
   document.getElementById('analyze-btn').addEventListener('click', runAudit);
 
-  const LOADING_MESSAGES = [
-    'Extracting document text',
-    'Orchestrator: reading document',
-    'Orchestrator: selecting frameworks',
-    'Dispatching compliance agents',
-    'Agents running in parallel',
-    'Scoring findings',
-    'Building report',
-  ];
-  let loadingInterval;
-
   async function runAudit() {
     if (!selectedFile) return;
 
     show('loading');
-    let msgIdx = 0;
-    document.getElementById('loading-status').innerHTML = `<strong>${LOADING_MESSAGES[0]}</strong>`;
-    loadingInterval = setInterval(() => {
-      msgIdx = (msgIdx + 1) % LOADING_MESSAGES.length;
-      document.getElementById('loading-status').innerHTML = `<strong>${LOADING_MESSAGES[msgIdx]}</strong>`;
-    }, 2200);
+    document.getElementById('phase-scan').style.display = '';
+    document.getElementById('phase-agents').style.display = 'none';
+    document.getElementById('loading-status').innerHTML = '<strong>Uploading document</strong>';
 
     const form = new FormData();
     form.append('file', selectedFile);
 
+    // Step 1: upload file, start job, get job_id back immediately
+    let jobId;
     try {
+      document.getElementById('loading-status').innerHTML = '<strong>Orchestrator: reading document</strong>';
       const res  = await fetch('/analyze', { method: 'POST', body: form });
       const data = await res.json();
-      clearInterval(loadingInterval);
-
       if (!res.ok || data.error) { show('upload'); showError(data.error || 'Analysis failed.'); return; }
-
-      renderResults(data);
+      jobId = data.job_id;
     } catch (e) {
-      clearInterval(loadingInterval);
       show('upload');
       showError('Network error — is the server running?');
+      return;
     }
+
+    // Step 2: connect to SSE stream for real-time progress
+    const es = new EventSource(`/stream/${jobId}`);
+
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data);
+
+      if (event.type === 'orchestrator') {
+        // Switch from scanner to progress bars
+        document.getElementById('phase-scan').style.display = 'none';
+        document.getElementById('agents-reason').textContent = event.data.overall_reasoning || '';
+        document.getElementById('phase-agents').style.display = 'block';
+
+        const barsEl = document.getElementById('fw-progress-bars');
+        barsEl.innerHTML = '';
+        (event.data.selected_frameworks || []).forEach(key => {
+          const row = document.createElement('div');
+          row.className = 'fw-bar-row';
+          row.innerHTML = `
+            <div class="fw-bar-header">
+              <span class="fw-bar-name">${key}</span>
+              <span class="fw-bar-status" id="bst-${key}">Queued</span>
+              <span class="fw-bar-pct" id="bpct-${key}">0%</span>
+            </div>
+            <div class="fw-bar-track">
+              <div class="fw-bar-fill" id="bfill-${key}" style="width:0%"></div>
+            </div>`;
+          barsEl.appendChild(row);
+        });
+      }
+
+      else if (event.type === 'progress') {
+        const { framework: key, chunk, total } = event.data;
+        const pct = Math.round((chunk / total) * 100);
+        const fill = document.getElementById(`bfill-${key}`);
+        const pctEl = document.getElementById(`bpct-${key}`);
+        const stEl  = document.getElementById(`bst-${key}`);
+        if (fill)  fill.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = pct + '%';
+        if (stEl) {
+          if (pct >= 100) {
+            stEl.textContent = 'Complete ✓';
+            if (fill)  fill.classList.add('complete');
+            if (pctEl) { pctEl.textContent = '100%'; pctEl.classList.add('complete'); }
+          } else {
+            stEl.textContent = `Chunk ${chunk} / ${total}`;
+          }
+        }
+      }
+
+      else if (event.type === 'done') {
+        es.close();
+        lastResults = event.data;
+        renderResults(event.data);
+      }
+
+      else if (event.type === 'error') {
+        es.close();
+        show('upload');
+        showError(event.data || 'Analysis failed.');
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      show('upload');
+      showError('Connection lost. Please try again.');
+    };
   }
 
   // ── Render Results ─────────────────────────────────────────────────────────
@@ -1077,6 +1296,256 @@
     t.textContent = msg;
     t.classList.add('visible');
     setTimeout(() => t.classList.remove('visible'), 5000);
+  }
+
+  // ── Download Report (PDF) ─────────────────────────────────────────────────
+  function downloadReport() {
+    if (!lastResults) return;
+    const d    = lastResults;
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW   = doc.internal.pageSize.getWidth();
+    const pageH   = doc.internal.pageSize.getHeight();
+    const margin  = 18;
+    const contentW = pageW - margin * 2;
+
+    // Palette
+    const C_DARK   = [7,   9,  15];
+    const C_GOLD   = [200, 151, 47];
+    const C_MUTED  = [90, 107, 136];
+    const C_TEXT   = [30,  35,  50];
+    const C_PASS   = [22, 163,  74];
+    const C_PART   = [217, 119, 6];
+    const C_FAIL   = [220,  38,  38];
+    const C_BG     = [240, 242, 248];
+
+    // ── Header bar
+    doc.setFillColor(...C_DARK);
+    doc.rect(0, 0, pageW, 20, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.setTextColor(...C_GOLD);
+    doc.text('LEXIS · AUDIT', margin, 13);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(180, 190, 210);
+    doc.text('AI COMPLIANCE INTELLIGENCE', margin, 17.5);
+
+    let y = 30;
+
+    // ── Report title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(...C_TEXT);
+    doc.text('Compliance Report', margin, y);
+    y += 7;
+
+    // ── Meta row
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...C_MUTED);
+    const metaParts = [
+      d.filename || 'Unknown document',
+      date,
+      `${(d.char_count / 1000).toFixed(1)}k characters`,
+    ];
+    if (d.truncated) metaParts.push(`${d.chunk_count} chunks`);
+    doc.text(metaParts.join('   ·   '), margin, y);
+    y += 4;
+
+    // ── Gold rule
+    doc.setDrawColor(...C_GOLD);
+    doc.setLineWidth(0.6);
+    doc.line(margin, y, pageW - margin, y);
+    y += 7;
+
+    // ── Orchestrator Decision
+    if (d.orchestrator) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...C_GOLD);
+      doc.text('ORCHESTRATOR DECISION', margin, y);
+      y += 5;
+
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...C_TEXT);
+      const rLines = doc.splitTextToSize(d.orchestrator.overall_reasoning || '', contentW);
+      doc.text(rLines, margin, y);
+      y += rLines.length * 5 + 3;
+
+      const selected = (d.orchestrator.selected_frameworks || []).join('  ·  ');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...C_PASS);
+      doc.text(`Selected: ${selected}`, margin, y);
+      y += 5;
+
+      const perFw = d.orchestrator.per_framework || {};
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      Object.entries(perFw).forEach(([key, info]) => {
+        doc.setTextColor(...(info.applies ? C_PASS : C_MUTED));
+        const icon = info.applies ? '✓' : '✗';
+        const line = doc.splitTextToSize(`${icon} ${key}: ${info.reason}`, contentW - 4);
+        doc.text(line, margin + 2, y);
+        y += line.length * 4.5;
+      });
+      y += 4;
+    }
+
+    // ── Per-framework sections
+    Object.entries(d.frameworks).forEach(([, fw]) => {
+      if (y > pageH - 70) { doc.addPage(); y = margin; }
+
+      // Section bg
+      doc.setFillColor(...C_BG);
+      doc.roundedRect(margin - 2, y - 5, contentW + 4, 16, 1, 1, 'F');
+
+      // Framework name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...C_TEXT);
+      doc.text(fw.name, margin + 1, y + 5);
+
+      // Score (right-aligned)
+      const sc = fw.score >= 80 ? C_PASS : fw.score >= 60 ? C_PART : C_FAIL;
+      doc.setTextColor(...sc);
+      doc.text(`${fw.score} / 100`, pageW - margin - 1, y + 5, { align: 'right' });
+      y += 14;
+
+      // Stat pills
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...C_PASS);  doc.text(`✓ ${fw.passed} passed`,  margin,      y);
+      doc.setTextColor(...C_PART);  doc.text(`~ ${fw.partial} partial`, margin + 32, y);
+      doc.setTextColor(...C_FAIL);  doc.text(`✗ ${fw.failed} failed`,  margin + 64, y);
+      y += 6;
+
+      // Summary
+      if (fw.summary) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 108, 130);
+        const sLines = doc.splitTextToSize(fw.summary, contentW - 4);
+        // Left accent bar
+        doc.setFillColor(...C_GOLD);
+        doc.rect(margin, y - 1, 1.5, sLines.length * 4.5 + 1, 'F');
+        doc.text(sLines, margin + 4, y);
+        y += sLines.length * 4.5 + 5;
+      }
+
+      // Findings table
+      const sorted = [...fw.findings].sort((a, b) => {
+        const r = { missing: 0, partial: 1, satisfied: 2 };
+        return (r[a.status] ?? 3) - (r[b.status] ?? 3);
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [['ID', 'Requirement', 'Status', 'Severity', 'Finding']],
+        body: sorted.map(f => [
+          f.id,
+          f.name,
+          f.status,
+          f.severity || '—',
+          (f.explanation || '').substring(0, 90) + ((f.explanation || '').length > 90 ? '…' : ''),
+        ]),
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.5, cellPadding: 2.2, overflow: 'linebreak' },
+        headStyles: { fillColor: C_DARK, textColor: [180, 190, 210], fontStyle: 'bold', fontSize: 7.5 },
+        columnStyles: {
+          0: { cellWidth: 16 },
+          1: { cellWidth: 42 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 18 },
+          4: { cellWidth: 'auto' },
+        },
+        didParseCell(data) {
+          if (data.section !== 'body') return;
+          if (data.column.index === 2) {
+            const s = data.cell.raw;
+            data.cell.styles.textColor =
+              s === 'satisfied' ? C_PASS : s === 'partial' ? C_PART : C_FAIL;
+            data.cell.styles.fontStyle = 'bold';
+          }
+          if (data.column.index === 3) {
+            const s = data.cell.raw;
+            data.cell.styles.textColor =
+              s === 'low' ? C_PASS : s === 'medium' ? C_PART : C_FAIL;
+          }
+        },
+        alternateRowStyles: { fillColor: [248, 249, 252] },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Evidence block (key findings with evidence quotes)
+      const withEvidence = sorted.filter(f => f.evidence && f.status !== 'satisfied');
+      if (withEvidence.length) {
+        if (y > pageH - 40) { doc.addPage(); y = margin; }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...C_MUTED);
+        doc.text('KEY EVIDENCE', margin, y);
+        y += 5;
+
+        withEvidence.slice(0, 5).forEach(f => {
+          if (y > pageH - 30) { doc.addPage(); y = margin; }
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(...C_TEXT);
+          doc.text(`${f.id} — ${f.name}`, margin, y);
+          y += 4;
+
+          doc.setFillColor(...C_GOLD);
+          const ev = doc.splitTextToSize(`"${f.evidence}"`, contentW - 8);
+          doc.rect(margin, y - 1, 1.5, ev.length * 4.3 + 1, 'F');
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(8);
+          doc.setTextColor(100, 108, 130);
+          doc.text(ev, margin + 5, y);
+          y += ev.length * 4.3 + 5;
+        });
+        y += 4;
+      }
+    });
+
+    // ── Footer on every page
+    const pages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...C_MUTED);
+      doc.text(
+        `Generated by Lexis Audit  ·  Powered by Claude  ·  Page ${i} of ${pages}`,
+        pageW / 2, pageH - 7, { align: 'center' }
+      );
+      doc.setDrawColor(...C_GOLD);
+      doc.setLineWidth(0.3);
+      doc.line(margin, pageH - 11, pageW - margin, pageH - 11);
+    }
+
+    const slug = (d.filename || 'report').replace(/\.[^.]+$/, '').replace(/\s+/g, '-');
+    doc.save(`lexis-audit-${slug}-${Date.now()}.pdf`);
+  }
+
+  // ── Run New Audit ──────────────────────────────────────────────────────────
+  function runNewAudit() {
+    lastResults = null;
+    clearFile();
+    const rs = document.getElementById('results-section');
+    rs.classList.remove('visible', 'shown');
+    document.getElementById('scores-grid').innerHTML   = '';
+    document.getElementById('fw-tabs').innerHTML       = '';
+    document.getElementById('fw-panels').innerHTML     = '';
+    document.getElementById('orch-callout').style.display = 'none';
+    document.getElementById('fw-progress-bars').innerHTML = '';
+    show('upload');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
 </body>

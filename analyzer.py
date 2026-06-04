@@ -1,6 +1,7 @@
 import anthropic
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from frameworks import FRAMEWORKS
 
 CHUNK_SIZE = 120_000
@@ -8,7 +9,7 @@ CHUNK_OVERLAP = 8_000
 STATUS_RANK = {'satisfied': 2, 'partial': 1, 'missing': 0}
 
 
-def analyze_document(text: str, framework_keys: list, filename: str = '') -> dict:
+def analyze_document(text: str, framework_keys: list, filename: str = '', progress_callback=None) -> dict:
     if not os.environ.get('ANTHROPIC_API_KEY'):
         raise EnvironmentError('ANTHROPIC_API_KEY is not set')
 
@@ -23,21 +24,31 @@ def analyze_document(text: str, framework_keys: list, filename: str = '') -> dic
         'frameworks': {},
     }
 
-    for key in framework_keys:
-        if key not in FRAMEWORKS:
-            continue
-        fw = FRAMEWORKS[key]
-        print(f'Analyzing {fw["name"]} across {len(chunks)} chunk(s)...')
+    valid_keys = [k for k in framework_keys if k in FRAMEWORKS]
 
-        if len(chunks) == 1:
-            results['frameworks'][key] = _analyze_chunk(client, chunks[0], fw)
-        else:
-            chunk_findings_list = [
-                _analyze_chunk(client, chunk, fw)['findings']
-                for chunk in chunks
-            ]
-            merged = _merge_findings(chunk_findings_list)
-            results['frameworks'][key] = _summarize(merged, fw)
+    def _run_framework(key):
+        fw = FRAMEWORKS[key]
+        n = len(chunks)
+        print(f'Analyzing {fw["name"]} across {n} chunk(s)...')
+        if n == 1:
+            result = _analyze_chunk(client, chunks[0], fw)
+            if progress_callback:
+                progress_callback({'framework': key, 'chunk': 1, 'total': 1})
+            return key, result
+        chunk_findings_list = []
+        for i, chunk in enumerate(chunks):
+            findings = _analyze_chunk(client, chunk, fw)['findings']
+            chunk_findings_list.append(findings)
+            if progress_callback:
+                progress_callback({'framework': key, 'chunk': i + 1, 'total': n})
+        merged = _merge_findings(chunk_findings_list)
+        return key, _summarize(merged, fw)
+
+    with ThreadPoolExecutor(max_workers=len(valid_keys) or 1) as executor:
+        futures = {executor.submit(_run_framework, key): key for key in valid_keys}
+        for future in as_completed(futures):
+            key, fw_result = future.result()
+            results['frameworks'][key] = fw_result
 
     return results
 
