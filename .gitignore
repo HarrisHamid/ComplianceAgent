@@ -1,1 +1,3 @@
 .env
+__pycache__/
+compliance_audits.db
