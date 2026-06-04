@@ -50,55 +50,54 @@ def init_db():
     print(f"Database ready: {DB_FILE}")
 
 
-def save_audit(url: str, framework: str, audit_result: dict) -> int:
+def save_audit(source: str, framework_keys: list, results: dict) -> int:
     """
-    Saves a completed audit to the database.
-    Returns the audit's ID so we can reference it later.
-
-    Why save to a DB at all? Two reasons:
-    1. It proves to the judges this is "production-ready" — real apps persist data
-    2. Your report agent can query past audits to show trends
+    Saves one audit row per framework from an analyze_document() result.
+    source: filename or URL being audited
+    framework_keys: list of framework keys that were run (e.g. ['GDPR', 'SOC2'])
+    results: the dict returned by analyze_document()
+    Returns the first inserted audit_id.
     """
-    now = datetime.now().isoformat()  # e.g. "2024-01-15T14:23:01.123456"
+    now = datetime.now().isoformat()
+    first_id = None
 
     with sqlite3.connect(DB_FILE) as conn:
+        for key in framework_keys:
+            fw = results.get('frameworks', {}).get(key)
+            if not fw:
+                continue
 
-        # INSERT the main audit record
-        # The ? placeholders are parameterized queries — NEVER use f-strings
-        # to inject values into SQL. That creates SQL injection vulnerabilities.
-        # The ? syntax safely escapes everything automatically.
-        cursor = conn.execute("""
-            INSERT INTO audits (url, framework, score, passed, failed, findings, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            url,
-            framework,
-            audit_result["compliance_score"],
-            audit_result["passed"],
-            audit_result["failed"],
-            json.dumps(audit_result["findings"]),  # convert list → JSON string for storage
-            now
-        ))
-
-        # cursor.lastrowid gives us the auto-generated ID of the row we just inserted
-        audit_id = cursor.lastrowid
-
-        # INSERT each violation as its own row for easy querying
-        for violation in audit_result["violations"]:
-            conn.execute("""
-                INSERT INTO violations (audit_id, requirement_id, requirement_name, severity, explanation, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+            cursor = conn.execute("""
+                INSERT INTO audits (url, framework, score, passed, failed, findings, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
-                audit_id,
-                violation["id"],
-                violation["requirement"],
-                violation["severity"],
-                violation["explanation"],
+                source,
+                fw['name'],
+                fw['score'],
+                fw['passed'],
+                fw['failed'],
+                json.dumps(fw['findings']),
                 now
             ))
+            audit_id = cursor.lastrowid
+            if first_id is None:
+                first_id = audit_id
 
-    print(f"Saved audit #{audit_id} for {url} (score: {audit_result['compliance_score']}%)")
-    return audit_id
+            violations = [f for f in fw['findings'] if f['status'] != 'satisfied']
+            for v in violations:
+                conn.execute("""
+                    INSERT INTO violations (audit_id, requirement_id, requirement_name, severity, explanation, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    audit_id,
+                    v['id'],
+                    v['name'],
+                    v['severity'],
+                    v['explanation'],
+                    now
+                ))
+
+    return first_id or 0
 
 
 def get_audit(audit_id: int) -> dict:

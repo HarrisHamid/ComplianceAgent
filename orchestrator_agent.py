@@ -14,36 +14,40 @@ def detect_frameworks(policy_text: str) -> dict:
         f"- {name}: {desc}" for name, desc in FRAMEWORK_DESCRIPTIONS.items()
     )
 
-    prompt = f"""You are a compliance expert analyzing a policy document to determine which regulatory frameworks are relevant.
+    per_fw_template = ",\n".join(
+        f'    "{key}": {{"applies": true, "reason": "one sentence"}}'
+        for key in FRAMEWORKS
+    )
+
+    prompt = f"""You are a compliance expert analyzing a document to determine which regulatory frameworks are relevant.
 
 Available frameworks:
 {framework_list}
 
-Policy Document:
+Document (first 8,000 characters):
 ---
 {policy_text[:8000]}
 ---
 
-Analyze this document and determine which frameworks apply based on:
-- GDPR: Does the company serve EU residents or explicitly reference GDPR?
-- HIPAA: Does the company handle health/medical data or Protected Health Information (PHI)?
-- SOC2: Is this a SaaS or cloud technology company that stores customer data?
+Determine which frameworks apply. Use these signals:
+- GDPR: Company serves EU residents, mentions GDPR, or processes personal data of EU subjects
+- SOC2: SaaS or cloud company that stores customer data and needs enterprise security certification
+- HIPAA: Handles patient health data, medical records, or Protected Health Information (PHI)
+- ISO27001: Mentions ISO 27001 certification, ISMS, formal security management, or is a B2B enterprise vendor
 
 Respond with ONLY a JSON object, no other text:
 {{
   "selected_frameworks": ["GDPR", "SOC2"],
-  "overall_reasoning": "one sentence describing what kind of company this is and why those frameworks apply",
+  "overall_reasoning": "one sentence describing this document and why those frameworks apply",
   "per_framework": {{
-    "GDPR":  {{"applies": true,  "reason": "one sentence"}},
-    "HIPAA": {{"applies": false, "reason": "one sentence"}},
-    "SOC2":  {{"applies": true,  "reason": "one sentence"}}
+{per_fw_template}
   }}
 }}
 
 Rules:
-- selected_frameworks must only contain frameworks where applies is true
-- If genuinely ambiguous, include the framework (err on the side of coverage)
-- If none apply, return all three as a safe fallback"""
+- selected_frameworks must only list frameworks where applies is true
+- Err on the side of inclusion when ambiguous
+- If nothing is clear, return all frameworks as a fallback"""
 
     client = anthropic.Anthropic()
 
