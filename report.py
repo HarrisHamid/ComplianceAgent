@@ -16,7 +16,7 @@ def generate_report(url: str, framework: str, audit_result: dict) -> str:
                 # More efficient than concatenating strings with +=
 
     lines.append("=" * 60)
-    lines.append("  GDPR COMPLIANCE AUDIT REPORT")
+    lines.append(f"  {framework} COMPLIANCE AUDIT REPORT")
     lines.append("=" * 60)
     lines.append(f"  URL       : {url}")
     lines.append(f"  Framework : {framework}")
