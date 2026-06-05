@@ -1,3 +1,27 @@
+# Environment
 .env
+.env.*
+
+# Python
 __pycache__/
-compliance_audits.db
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.local
+
+# OS
+.DS_Store
+Thumbs.db
