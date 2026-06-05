@@ -129,17 +129,22 @@ export default function Scan() {
     store.risk_score >= 40 ? 'text-amber' : 'text-emerald'
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-bg">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-bg/80 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 bg-bg/70 backdrop-blur-md border-b border-border/50">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-amber animate-pulse" />
           <Link to="/" className="font-mono text-xs tracking-[0.2em] uppercase text-secondary hover:text-primary transition-colors">
             COMPLIANCE<span className="text-amber">·</span>AGENT
           </Link>
-          <span className="text-border">|</span>
-          <span className="font-mono text-xs text-muted truncate max-w-48">{store.url}</span>
+          {store.url && (
+            <>
+              <span className="text-border/50 mx-1">·</span>
+              <span className="font-mono text-xs text-muted truncate max-w-48">{store.url}</span>
+            </>
+          )}
         </div>
-        <Link to="/history" className="font-mono text-xs tracking-widest uppercase text-muted hover:text-primary transition-colors">
+        <Link to="/history" className="font-mono text-xs tracking-widest uppercase text-muted hover:text-amber transition-colors">
           History
         </Link>
       </header>

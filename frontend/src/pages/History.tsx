@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Plus } from 'lucide-react'
 import { getHistory } from '../lib/api'
 import { useScanStore } from '../store/scanStore'
 import type { HistoryItem } from '../types'
@@ -78,35 +78,34 @@ export default function History() {
   )
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-bg">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-bg/80 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 font-mono text-xs text-muted hover:text-primary transition-colors">
-            <ArrowLeft className="w-3 h-3" /> HOME
-          </Link>
-          <span className="text-border">|</span>
-          <span className="font-mono text-xs tracking-[0.2em] uppercase text-secondary">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 bg-bg/70 backdrop-blur-md border-b border-border/50">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-amber animate-pulse" />
+          <Link to="/" className="font-mono text-xs tracking-[0.2em] uppercase text-secondary hover:text-primary transition-colors">
             COMPLIANCE<span className="text-amber">·</span>AGENT
-          </span>
+          </Link>
         </div>
+        <nav className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase text-muted hover:text-amber transition-colors">
+            <ArrowLeft className="w-3 h-3" /> Home
+          </Link>
+          <Link
+            to="/"
+            className="flex items-center gap-2 bg-amber hover:bg-amber/90 text-bg font-sans font-semibold text-xs tracking-[0.14em] uppercase px-4 py-2 transition-all hover:-translate-y-0.5"
+          >
+            <Plus className="w-3 h-3" /> New Audit
+          </Link>
+        </nav>
       </header>
 
       <div className="max-w-6xl mx-auto w-full px-8 py-10 flex-1">
 
         {/* Title */}
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <div className="font-mono text-[10px] tracking-[0.28em] uppercase text-amber mb-3">Audit Registry</div>
-            <h1 className="font-display text-5xl text-primary">History</h1>
-          </div>
-          <Link
-            to="/"
-            className="flex items-center gap-2 bg-amber hover:bg-amber/90 text-bg font-sans font-semibold text-xs tracking-[0.14em] uppercase px-5 py-3 transition-all hover:-translate-y-0.5"
-          >
-            RUN NEW AUDIT
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+        <div className="mb-8">
+          <div className="font-mono text-[10px] tracking-[0.28em] uppercase text-amber mb-3">Audit Registry</div>
+          <h1 className="font-display text-5xl text-primary">History</h1>
         </div>
 
         {/* Summary pills */}
@@ -185,6 +184,19 @@ export default function History() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-surface/40 px-8 py-6 mt-auto">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-amber" />
+            <span className="font-mono text-xs tracking-[0.2em] uppercase text-secondary">
+              COMPLIANCE<span className="text-amber">·</span>AGENT
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-muted/40 tracking-widest">Powered by Claude</span>
+        </div>
+      </footer>
     </div>
   )
 }

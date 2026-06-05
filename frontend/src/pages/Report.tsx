@@ -167,28 +167,28 @@ export default function Report() {
                               'text-emerald border-emerald bg-emerald-dim'
 
   return (
-    <div className="min-h-screen flex flex-col" ref={printRef}>
+    <div className="min-h-screen flex flex-col bg-bg" ref={printRef}>
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-bg/80 backdrop-blur-sm sticky top-0 z-20">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 font-mono text-xs text-muted hover:text-primary transition-colors">
-            <ArrowLeft className="w-3 h-3" /> NEW AUDIT
-          </button>
-          <span className="text-border">|</span>
-          <span className="font-mono text-xs tracking-[0.2em] uppercase text-secondary">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 bg-bg/70 backdrop-blur-md border-b border-border/50">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-amber animate-pulse" />
+          <button onClick={() => navigate('/')} className="font-mono text-xs tracking-[0.2em] uppercase text-secondary hover:text-primary transition-colors">
             COMPLIANCE<span className="text-amber">·</span>AGENT
-          </span>
+          </button>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/history" className="flex items-center gap-1.5 font-mono text-xs text-muted hover:text-primary transition-colors">
-            <History className="w-3 h-3" /> HISTORY
+        <div className="flex items-center gap-6">
+          <button onClick={() => navigate('/')} className="flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase text-muted hover:text-amber transition-colors">
+            <ArrowLeft className="w-3 h-3" /> New Audit
+          </button>
+          <Link to="/history" className="flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase text-muted hover:text-amber transition-colors">
+            <History className="w-3 h-3" /> History
           </Link>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 border border-amber bg-amber-glow hover:bg-amber/20 px-4 py-2 font-mono text-xs text-amber tracking-widest uppercase transition-colors"
+            className="flex items-center gap-2 bg-amber hover:bg-amber/90 text-bg font-sans font-semibold text-xs tracking-[0.14em] uppercase px-4 py-2 transition-all hover:-translate-y-0.5"
           >
             <Download className="w-3 h-3" />
-            EXPORT PDF
+            Export PDF
           </button>
         </div>
       </header>
@@ -303,6 +303,24 @@ export default function Report() {
           filtered.map((v, i) => <ViolationCard key={v.id} v={v} index={i} />)
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-surface/40 px-8 py-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-amber" />
+            <span className="font-mono text-xs tracking-[0.2em] uppercase text-secondary">
+              COMPLIANCE<span className="text-amber">·</span>AGENT
+            </span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link to="/history" className="font-mono text-xs text-muted hover:text-primary transition-colors tracking-widest uppercase">
+              History
+            </Link>
+            <span className="font-mono text-[10px] text-muted/40 tracking-widest">Powered by Claude</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

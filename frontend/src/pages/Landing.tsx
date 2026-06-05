@@ -4,6 +4,7 @@ import { ArrowRight, Globe, Zap, Shield, Check, X, History } from 'lucide-react'
 import { startAudit } from '../lib/api'
 import { useScanStore } from '../store/scanStore'
 import type { Framework } from '../types'
+import { HeroGeometric } from '../components/ui/shape-landing-hero'
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
@@ -251,104 +252,28 @@ export default function Landing() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-16 overflow-hidden">
-
-        {/* Animated background blobs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute blob-1"
-            style={{
-              width: '65%', height: '75%', left: '-15%', top: '10%',
-              background: 'radial-gradient(ellipse, rgba(139,92,246,0.22) 0%, transparent 70%)',
-              filter: 'blur(48px)',
-              animation: 'blobFloat1 20s ease-in-out infinite',
-            }}
-          />
-          <div className="absolute blob-2"
-            style={{
-              width: '55%', height: '65%', right: '-10%', top: '5%',
-              background: 'radial-gradient(ellipse, rgba(6,182,212,0.18) 0%, transparent 70%)',
-              filter: 'blur(48px)',
-              animation: 'blobFloat2 25s ease-in-out infinite',
-            }}
-          />
-          <div className="absolute blob-3"
-            style={{
-              width: '45%', height: '55%', left: '30%', bottom: '5%',
-              background: 'radial-gradient(ellipse, rgba(245,158,11,0.14) 0%, transparent 70%)',
-              filter: 'blur(48px)',
-              animation: 'blobFloat3 18s ease-in-out infinite',
-            }}
-          />
-          {/* Scanlines */}
-          <div className="absolute inset-0"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px)',
-              pointerEvents: 'none',
-            }}
-          />
+      <HeroGeometric
+        badge="Multi-Agent AI · GDPR · HIPAA · SOC 2"
+        title1="Your Audit Consultant"
+        title2="Just Got Automated."
+      >
+        <div className="flex flex-col items-center gap-4 pt-2">
+          <button
+            onClick={scrollToApp}
+            className="inline-flex items-center gap-3 border border-amber/40 bg-amber-glow hover:bg-amber/15 px-8 py-4 font-sans font-semibold text-sm tracking-[0.15em] uppercase text-amber transition-all hover:-translate-y-0.5"
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 24px rgba(245,158,11,0.35)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
+          >
+            Run your first audit <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={scrollToApp}
+            className="flex flex-col items-center gap-2 opacity-40 hover:opacity-70 transition-opacity cursor-pointer mt-4"
+          >
+            <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent" />
+          </button>
         </div>
-
-        {/* Eyebrow */}
-        <div
-          className="hero-word relative z-10 inline-flex items-center gap-2 border border-amber/30 bg-amber-glow px-4 py-1.5 mb-10"
-          style={{ animationDelay: '0.1s' }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-amber" />
-          <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-amber">
-            Multi-Agent AI · GDPR · HIPAA · SOC 2
-          </span>
-        </div>
-
-        {/* Headline */}
-        <div className="relative z-10 text-center mb-8 max-w-5xl">
-          <h1 className="font-display leading-[0.88]" style={{ letterSpacing: '-0.02em' }}>
-            <span
-              className="hero-word block text-[clamp(56px,9vw,130px)] text-primary"
-              style={{ animationDelay: '0.25s' }}
-            >
-              YOUR AUDIT
-            </span>
-            <span
-              className="hero-word block text-[clamp(56px,9vw,130px)] text-primary"
-              style={{ animationDelay: '0.45s' }}
-            >
-              CONSULTANT
-            </span>
-            <span
-              className="hero-word block text-[clamp(56px,9vw,130px)] gradient-text"
-              style={{ animationDelay: '0.65s' }}
-            >
-              JUST GOT AUTOMATED.
-            </span>
-          </h1>
-        </div>
-
-        {/* Tagline */}
-        <p
-          className="hero-word relative z-10 font-sans text-lg text-secondary text-center max-w-lg mb-12 leading-relaxed"
-          style={{ animationDelay: '0.9s' }}
-        >
-          GDPR, HIPAA, and SOC 2 compliance reports in{' '}
-          <span className="text-primary font-medium">under 2 minutes</span>. No retainers.
-          No $350/hr consultants. Just AI agents doing the work.
-        </p>
-
-        {/* Scroll CTA */}
-        <button
-          onClick={scrollToApp}
-          className="hero-word relative z-10 flex items-center gap-3 border border-amber/40 bg-amber-glow hover:bg-amber/15 px-8 py-4 font-sans font-semibold text-sm tracking-[0.15em] uppercase text-amber transition-all hover:-translate-y-0.5"
-          style={{ animationDelay: '1.1s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 24px rgba(245,158,11,0.35)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
-        >
-          Run your first audit <ArrowRight className="w-4 h-4" />
-        </button>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40 hover:opacity-70 transition-opacity cursor-pointer" onClick={scrollToApp}>
-          <div className="w-px h-8 bg-gradient-to-b from-muted to-transparent" />
-        </div>
-      </section>
+      </HeroGeometric>
 
       {/* ── MARQUEE TICKER ── */}
       <div className="border-y border-border bg-surface/80 backdrop-blur-sm py-3 overflow-hidden">
