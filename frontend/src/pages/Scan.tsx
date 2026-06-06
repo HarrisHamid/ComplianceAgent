@@ -6,12 +6,12 @@ import type { Severity } from '../types'
 import { PHASE_LABELS } from '../types'
 
 const AGENT_COLORS: Record<string, string> = {
-  crawler:          'text-blue',
+  crawler:          'text-amber',
   orchestrator:     'text-violet',
   gdpr_agent:       'text-emerald',
-  hipaa_agent:      'text-amber',
-  soc2_agent:       'text-rose',
-  reporter:         'text-secondary',
+  hipaa_agent:      'text-cyan',
+  soc2_agent:       'text-secondary',
+  reporter:         'text-muted',
 }
 
 function severityColor(s: Severity) {
@@ -114,7 +114,10 @@ export default function Scan() {
         store.addLog({ agent: 'system', message: `✖ ${err}`, color: 'rose' })
       }
     )
-    return cleanup
+    return () => {
+      cleanup()
+      startedRef.current = false
+    }
   }, [id])
 
   // auto-scroll log

@@ -101,18 +101,21 @@ Return ONLY a valid JSON object:
   "findings": [
     {{
       "id": "<id>",
-      "name": "<name>",
+      "name": "<requirement name>",
       "status": "satisfied" | "partial" | "missing",
-      "severity": "low" | "medium" | "high",
-      "evidence": "<exact quote from doc or null>",
-      "explanation": "<one sentence>"
+      "severity": "low" | "medium" | "high" | "critical",
+      "article": "<specific article, section, or clause reference e.g. Art. 6(1) or §164.312>",
+      "category": "<compliance category e.g. Legal Basis, Consent, Access Controls, Data Subject Rights>",
+      "evidence": "<exact quote from the document, or null if absent>",
+      "explanation": "<one sentence describing what is missing or insufficient>",
+      "suggested_fix": "<one concrete actionable sentence describing how to fix this>"
     }}
   ],
   "summary": "<2-3 sentence executive summary>"
 }}
 
 Rules:
-- severity must be "low" if satisfied, "medium" if partial, "high" if missing
+- severity must be "low" if satisfied, "medium" if partial, "high" if missing, "critical" if a hard legal obligation is completely absent
 - Output ONLY the JSON, no markdown fences, no other text."""
 
     response = client.messages.create(

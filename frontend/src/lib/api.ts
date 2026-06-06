@@ -1,23 +1,22 @@
 import type { AuditReport, HistoryItem, StreamEvent } from '../types'
 import { getMockEvents, MOCK_HISTORY, GDPR_VIOLATIONS, HIPAA_VIOLATIONS, SOC2_VIOLATIONS } from './mockData'
 
-const USE_MOCK = true
+const USE_MOCK = false
 
-let mockReportStore: Record<string, AuditReport> = {}
+let reportStore: Record<string, AuditReport> = {}
 
-export async function startAudit(url: string, framework: string): Promise<string> {
+export async function startAudit(file: File, framework: string): Promise<string> {
   if (USE_MOCK) {
     const id = Math.random().toString(36).slice(2, 10)
     return id
   }
-  const res = await fetch('/api/audit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, framework }),
-  })
+  const form = new FormData()
+  form.append('file', file)
+  form.append('framework', framework)
+  const res = await fetch('/api/analyze', { method: 'POST', body: form })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to start audit')
-  return data.scan_id
+  return data.job_id
 }
 
 export function streamAudit(
@@ -35,7 +34,7 @@ export function streamAudit(
       const t = setTimeout(() => {
         if (event.type === 'done' && event.report) {
           const report = { ...event.report, scan_id: scanId }
-          mockReportStore[scanId] = report
+          reportStore[scanId] = report
           onDone(report)
         } else {
           onEvent(event)
@@ -46,7 +45,7 @@ export function streamAudit(
     return () => timers.forEach(clearTimeout)
   }
 
-  const es = new EventSource(`/api/audit/${scanId}/stream`)
+  const es = new EventSource(`/api/stream/${scanId}`)
   es.onmessage = (e) => {
     const data: StreamEvent = JSON.parse(e.data)
     if (data.type === 'done' && data.report) {
@@ -68,7 +67,7 @@ export function streamAudit(
 
 export async function getReport(scanId: string): Promise<AuditReport> {
   if (USE_MOCK) {
-    const r = mockReportStore[scanId]
+    const r = reportStore[scanId]
     if (r) return r
     const historyItem = MOCK_HISTORY.find((h) => h.scan_id === scanId)
     if (historyItem) {
@@ -90,7 +89,7 @@ export async function getReport(scanId: string): Promise<AuditReport> {
         completed_at: historyItem.created_at,
         violations,
       }
-      mockReportStore[scanId] = report
+      reportStore[scanId] = report
       return report
     }
     throw new Error('Report not found')

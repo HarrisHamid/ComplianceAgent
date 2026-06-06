@@ -8,14 +8,14 @@ function ElegantShape({
     width = 400,
     height = 100,
     rotate = 0,
-    gradient = "from-white/[0.08]",
+    color = 'rgba(96,165,250,0.15)',
 }: {
     className?: string;
     delay?: number;
     width?: number;
     height?: number;
     rotate?: number;
-    gradient?: string;
+    color?: string;
 }) {
     return (
         <motion.div
@@ -46,22 +46,12 @@ function ElegantShape({
                     repeat: Number.POSITIVE_INFINITY,
                     ease: "easeInOut",
                 }}
-                style={{
-                    width,
-                    height,
-                }}
+                style={{ width, height }}
                 className="relative"
             >
                 <div
-                    className={cn(
-                        "absolute inset-0 rounded-full",
-                        "bg-gradient-to-r to-transparent",
-                        gradient,
-                        "backdrop-blur-[2px] border-2 border-white/[0.15]",
-                        "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]",
-                        "after:absolute after:inset-0 after:rounded-full",
-                        "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"
-                    )}
+                    className="absolute inset-0 rounded-full backdrop-blur-[2px] border-2 border-white/[0.15] shadow-[0_8px_32px_0_rgba(255,255,255,0.1)] after:absolute after:inset-0 after:rounded-full after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"
+                    style={{ background: `linear-gradient(to right, ${color}, transparent)` }}
                 />
             </motion.div>
         </motion.div>
@@ -71,12 +61,14 @@ function ElegantShape({
 function HeroGeometric({
     badge = "Design Collective",
     title1 = "Elevate Your Digital Vision",
-    title2 = "Crafting Exceptional Websites",
+    title2 = "Crafting Exceptional",
+    title3 = "Websites",
     children,
 }: {
     badge?: string;
     title1?: string;
     title2?: string;
+    title3?: string;
     children?: React.ReactNode;
 }) {
     const fadeUpVariants = {
@@ -94,7 +86,7 @@ function HeroGeometric({
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#0a0d14]">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
+            <div className="absolute inset-0 blur-3xl" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.05) 0%, transparent 50%, rgba(125,211,252,0.04) 100%)' }} />
 
             <div className="absolute inset-0 overflow-hidden">
                 <ElegantShape
@@ -102,7 +94,7 @@ function HeroGeometric({
                     width={600}
                     height={140}
                     rotate={12}
-                    gradient="from-indigo-500/[0.15]"
+                    color="rgba(59,130,246,0.18)"
                     className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
                 />
 
@@ -111,7 +103,7 @@ function HeroGeometric({
                     width={500}
                     height={120}
                     rotate={-15}
-                    gradient="from-rose-500/[0.15]"
+                    color="rgba(56,189,248,0.14)"
                     className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
                 />
 
@@ -120,7 +112,7 @@ function HeroGeometric({
                     width={300}
                     height={80}
                     rotate={-8}
-                    gradient="from-violet-500/[0.15]"
+                    color="rgba(147,197,253,0.14)"
                     className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
                 />
 
@@ -129,7 +121,7 @@ function HeroGeometric({
                     width={200}
                     height={60}
                     rotate={20}
-                    gradient="from-amber-500/[0.15]"
+                    color="rgba(96,165,250,0.12)"
                     className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
                 />
 
@@ -138,7 +130,7 @@ function HeroGeometric({
                     width={150}
                     height={40}
                     rotate={-25}
-                    gradient="from-cyan-500/[0.15]"
+                    color="rgba(125,211,252,0.12)"
                     className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
                 />
             </div>
@@ -152,7 +144,7 @@ function HeroGeometric({
                         animate="visible"
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 md:mb-12"
                     >
-                        <Circle className="h-2 w-2 fill-rose-500/80" />
+                        <Circle className="h-2 w-2 fill-blue-400/80" />
                         <span className="text-sm text-white/60 tracking-wide">
                             {badge}
                         </span>
@@ -164,18 +156,21 @@ function HeroGeometric({
                         initial="hidden"
                         animate="visible"
                     >
-                        <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 tracking-tight">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
+                        <h1 className="font-bold mb-6 md:mb-8 tracking-tight">
+                            <span className="block text-4xl sm:text-6xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
                                 {title1}
                             </span>
-                            <br />
                             <span
-                                className={cn(
-                                    "bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300"
-                                )}
+                                className="block text-5xl sm:text-7xl md:text-8xl bg-clip-text text-transparent"
+                                style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #60a5fa, #38bdf8)' }}
                             >
                                 {title2}
                             </span>
+                            {title3 && (
+                                <span className="block text-5xl sm:text-7xl md:text-9xl bg-clip-text text-transparent bg-gradient-to-b from-white/60 to-white/20 leading-none mt-1">
+                                    {title3}
+                                </span>
+                            )}
                         </h1>
                     </motion.div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowRight, Globe, Zap, Shield, Check, X, History } from 'lucide-react'
+import { ArrowRight, Paperclip, Zap, Shield, Check, X, History } from 'lucide-react'
 import { startAudit } from '../lib/api'
 import { useScanStore } from '../store/scanStore'
 import type { Framework } from '../types'
@@ -9,17 +9,17 @@ import { HeroGeometric } from '../components/ui/shape-landing-hero'
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
 const FRAMEWORKS: { id: Framework; label: string; desc: string; color: string; border: string; bg: string }[] = [
-  { id: 'gdpr',  label: 'GDPR',  desc: 'EU Data Protection',    color: '#10B981', border: 'rgba(16,185,129,0.55)',  bg: 'rgba(16,185,129,0.08)'  },
-  { id: 'hipaa', label: 'HIPAA', desc: 'Health Data Privacy',   color: '#06B6D4', border: 'rgba(6,182,212,0.55)',   bg: 'rgba(6,182,212,0.08)'   },
-  { id: 'soc2',  label: 'SOC 2', desc: 'Security Controls',     color: '#8B5CF6', border: 'rgba(139,92,246,0.55)', bg: 'rgba(139,92,246,0.08)' },
-  { id: 'auto',  label: 'AUTO',  desc: 'Let the AI choose',     color: '#F59E0B', border: 'rgba(245,158,11,0.55)',  bg: 'rgba(245,158,11,0.08)'  },
+  { id: 'gdpr',  label: 'GDPR',  desc: 'EU Data Protection',    color: '#38bdf8', border: 'rgba(56,189,248,0.55)',  bg: 'rgba(56,189,248,0.08)'  },
+  { id: 'hipaa', label: 'HIPAA', desc: 'Health Data Privacy',   color: '#60a5fa', border: 'rgba(96,165,250,0.55)',  bg: 'rgba(96,165,250,0.08)'  },
+  { id: 'soc2',  label: 'SOC 2', desc: 'Security Controls',     color: '#93c5fd', border: 'rgba(147,197,253,0.55)', bg: 'rgba(147,197,253,0.08)' },
+  { id: 'auto',  label: 'AUTO',  desc: 'Let the AI choose',     color: '#bfdbfe', border: 'rgba(191,219,254,0.45)', bg: 'rgba(191,219,254,0.06)' },
 ]
 
 const STATS = [
-  { value: 847,  suffix: 'M', prefix: '$', label: 'Average GDPR enforcement fine',  color: '#EF4444', sub: 'EU fines in 2024 alone' },
-  { value: 72,   suffix: 'hr',             label: 'Breach notification window',      color: '#F59E0B', sub: 'Legal requirement, not optional' },
-  { value: 350,  suffix: '/hr', prefix: '$',label: 'Avg. compliance consultant rate', color: '#8B5CF6', sub: 'Before travel & expenses' },
-  { value: 2,    suffix: 'min',             label: 'Our audit completion time',       color: '#10B981', sub: 'vs weeks of back-and-forth' },
+  { value: 847,  suffix: 'M', prefix: '$', label: 'Average GDPR enforcement fine',  color: '#f87171', sub: 'EU fines in 2024 alone' },
+  { value: 72,   suffix: 'hr',             label: 'Breach notification window',      color: '#60a5fa', sub: 'Legal requirement, not optional' },
+  { value: 350,  suffix: '/hr', prefix: '$',label: 'Avg. compliance consultant rate', color: '#93c5fd', sub: 'Before travel & expenses' },
+  { value: 2,    suffix: 'min',             label: 'Our audit completion time',       color: '#38bdf8', sub: 'vs weeks of back-and-forth' },
 ]
 
 const TICKER = [
@@ -45,11 +45,11 @@ const NEW_WAY = [
 ]
 
 const STEPS = [
-  { num: '01', title: 'Enter a URL', icon: Globe, color: '#06B6D4',
-    desc: 'Paste any company URL. Our crawler discovers every policy, legal, and security page automatically.' },
-  { num: '02', title: 'Agents Audit in Parallel', icon: Zap, color: '#8B5CF6',
+  { num: '01', title: 'Attach a Document', icon: Paperclip, color: '#60a5fa',
+    desc: 'Upload any policy, privacy notice, or terms document. PDF, HTML, TXT, and DOCX all supported.' },
+  { num: '02', title: 'Agents Audit in Parallel', icon: Zap, color: '#93c5fd',
     desc: 'Specialist AI agents simultaneously check each clause against GDPR, HIPAA, and SOC 2 requirements.' },
-  { num: '03', title: 'Get Actionable Results', icon: Shield, color: '#10B981',
+  { num: '03', title: 'Get Actionable Results', icon: Shield, color: '#38bdf8',
     desc: 'Prioritized violations with severity ratings and specific remediation steps — not boilerplate paragraphs.' },
 ]
 
@@ -124,23 +124,29 @@ function StatCard({ stat, delay }: { stat: typeof STATS[0]; delay: number }) {
 function AuditForm({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate()
   const store = useScanStore()
-  const [url, setUrl] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [dragging, setDragging] = useState(false)
   const [framework, setFramework] = useState<Framework>('auto')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    const dropped = e.dataTransfer.files[0]
+    if (dropped) setFile(dropped)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const trimmed = url.trim()
-    if (!trimmed) { setError('Enter a URL to audit'); return }
-    let finalUrl = trimmed
-    if (!/^https?:\/\//i.test(finalUrl)) finalUrl = 'https://' + finalUrl
+    if (!file) { setError('Attach a document to audit'); return }
     setLoading(true)
     try {
-      const id = await startAudit(finalUrl, framework)
+      const id = await startAudit(file, framework)
       store.reset()
-      store.setUrl(finalUrl)
+      store.setUrl(file.name)
       store.setFramework(framework)
       store.setScanId(id)
       store.setStatus('running')
@@ -153,18 +159,45 @@ function AuditForm({ compact = false }: { compact?: boolean }) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      {/* URL input */}
-      <div className="relative mb-3 border border-border bg-surface/80 focus-within:border-amber transition-colors backdrop-blur-sm">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm text-amber select-none pointer-events-none">
-          ›_
-        </span>
+      {/* File drop zone */}
+      <div
+        className={`relative mb-3 border bg-surface/80 backdrop-blur-sm cursor-pointer transition-all ${
+          dragging ? 'border-amber bg-amber-glow' : file ? 'border-amber/60 bg-amber-glow/50' : 'border-border hover:border-border-active'
+        }`}
+        onDragOver={e => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
         <input
-          type="text"
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-          placeholder="https://company.com"
-          className="w-full bg-transparent font-mono text-base text-primary placeholder:text-muted pl-10 pr-4 py-4 outline-none"
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.html,.htm,.txt,.docx,.doc"
+          onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }}
+          className="hidden"
         />
+        {file ? (
+          <div className="flex items-center gap-3 px-4 py-4">
+            <span className="font-mono text-sm text-amber select-none">›_</span>
+            <Paperclip className="w-3.5 h-3.5 text-amber shrink-0" />
+            <span className="font-mono text-sm text-primary truncate">{file.name}</span>
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); setFile(null) }}
+              className="ml-auto text-muted hover:text-crimson transition-colors shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 gap-2 select-none">
+            <Paperclip className={`w-5 h-5 transition-colors ${dragging ? 'text-amber' : 'text-muted/50'}`} />
+            <span className="font-mono text-sm text-muted">
+              {dragging ? 'Drop to attach' : 'Drop a file or click to attach'}
+            </span>
+            <span className="font-mono text-[10px] text-muted/40 tracking-widest">PDF · HTML · TXT · DOCX</span>
+          </div>
+        )}
       </div>
 
       {/* Framework selector */}
@@ -199,12 +232,12 @@ function AuditForm({ compact = false }: { compact?: boolean }) {
         disabled={loading}
         className="w-full flex items-center justify-center gap-3 font-sans font-semibold text-sm tracking-[0.15em] uppercase py-5 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
         style={{
-          background: loading ? '#7a5a1a' : '#F59E0B',
-          color: '#0a0d14',
-          boxShadow: loading ? 'none' : '0 0 0 0 rgba(245,158,11,0)',
+          background: loading ? '#1e3a5f' : '#60a5fa',
+          color: '#07101e',
+          boxShadow: 'none',
           transition: 'all 0.2s, box-shadow 0.3s',
         }}
-        onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(245,158,11,0.45), 0 0 60px rgba(245,158,11,0.15)' }}
+        onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(96,165,250,0.45), 0 0 60px rgba(96,165,250,0.15)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
       >
         {loading ? (
@@ -255,13 +288,14 @@ export default function Landing() {
       <HeroGeometric
         badge="Multi-Agent AI · GDPR · HIPAA · SOC 2"
         title1="Your Audit Consultant"
-        title2="Just Got Automated."
+        title2="Just Got"
+        title3="Automated."
       >
         <div className="flex flex-col items-center gap-4 pt-2">
           <button
             onClick={scrollToApp}
             className="inline-flex items-center gap-3 border border-amber/40 bg-amber-glow hover:bg-amber/15 px-8 py-4 font-sans font-semibold text-sm tracking-[0.15em] uppercase text-amber transition-all hover:-translate-y-0.5"
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 24px rgba(245,158,11,0.35)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 24px rgba(96,165,250,0.35)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
           >
             Run your first audit <ArrowRight className="w-4 h-4" />
@@ -420,7 +454,7 @@ export default function Landing() {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px]"
             style={{
-              background: 'radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, transparent 70%)',
+              background: 'radial-gradient(ellipse, rgba(96,165,250,0.08) 0%, transparent 70%)',
               filter: 'blur(40px)',
             }}
           />
@@ -432,11 +466,11 @@ export default function Landing() {
               Try it right now — it's free
             </span>
             <h2 className="font-display text-5xl text-primary mb-4">
-              Audit any company<br />
+              Audit any document<br />
               <span className="gradient-text italic">in under 2 minutes.</span>
             </h2>
             <p className="font-sans text-base text-secondary">
-              No sign-up. No credit card. Just paste a URL.
+              No sign-up. No credit card. Just upload a file.
             </p>
           </div>
 
@@ -462,9 +496,9 @@ export default function Landing() {
           {/* Trust signals */}
           <div className={`reveal-up flex items-center justify-center gap-8 mt-8 ${appInView ? 'in-view' : ''}`} style={{ transitionDelay: '0.4s' }}>
             {[
-              { color: '#10B981', label: 'GDPR' },
-              { color: '#06B6D4', label: 'HIPAA' },
-              { color: '#8B5CF6', label: 'SOC 2' },
+              { color: '#38bdf8', label: 'GDPR' },
+              { color: '#60a5fa', label: 'HIPAA' },
+              { color: '#93c5fd', label: 'SOC 2' },
             ].map(fw => (
               <div key={fw.label} className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: fw.color }} />

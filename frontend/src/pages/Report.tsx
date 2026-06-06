@@ -12,8 +12,8 @@ function ScoreRing({ score }: { score: number }) {
   const R = 76
   const C = 2 * Math.PI * R
   const color =
-    score >= 75 ? '#10b981' :
-    score >= 50 ? '#f59e0b' : '#ef4444'
+    score >= 75 ? '#38bdf8' :
+    score >= 50 ? '#60a5fa' : '#f87171'
 
   useEffect(() => {
     const t = setTimeout(() => setDisplayed(score), 200)
@@ -24,7 +24,7 @@ function ScoreRing({ score }: { score: number }) {
     <div className="relative" style={{ width: 180, height: 180 }}>
       <svg width="180" height="180" viewBox="0 0 180 180">
         {/* track */}
-        <circle cx="90" cy="90" r={R} fill="none" stroke="#1f2937" strokeWidth="10" />
+        <circle cx="90" cy="90" r={R} fill="none" stroke="#1c2d42" strokeWidth="10" />
         {/* fill */}
         <circle
           cx="90" cy="90" r={R}
@@ -66,10 +66,10 @@ function SevBadge({ sev }: { sev: Severity }) {
 function ViolationCard({ v, index }: { v: Violation; index: number }) {
   const [open, setOpen] = useState(false)
   const leftColors = {
-    critical: '#ef4444',
-    high:     '#f97316',
-    medium:   '#f59e0b',
-    low:      '#6b7280',
+    critical: '#f87171',
+    high:     '#7dd3fc',
+    medium:   '#60a5fa',
+    low:      '#4a647e',
   }
 
   return (
